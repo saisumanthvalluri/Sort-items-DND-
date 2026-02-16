@@ -18,6 +18,7 @@
 	padding: 30px;
 	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
 	min-height: 300px;
+	overflow: visible;
 }
 
 /* Title */
@@ -174,4 +175,8 @@
 	100% {
 		transform: rotate(360deg);
 	}
+}
+
+.draggable-item {
+	touch-action: none;
 }

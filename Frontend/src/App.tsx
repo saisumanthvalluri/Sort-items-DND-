@@ -1,4 +1,4 @@
-import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, PointerSensor, closestCenter, useSensor, useSensors } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import React, { useEffect, useState } from "react";
 import "./App.css";
@@ -27,6 +27,14 @@ function App() {
 		hasNextPage: false,
 		hasPrevPage: false,
 	});
+
+	const sensors = useSensors(
+		useSensor(PointerSensor, {
+			activationConstraint: {
+				distance: 5, // start drag after moving 8px
+			},
+		}),
+	);
 
 	const fetchProducts = async () => {
 		setLoading(true);
@@ -221,6 +229,7 @@ function App() {
 				) : (
 					<>
 						<DndContext
+							sensors={sensors}
 							collisionDetection={closestCenter}
 							onDragStart={(event) => setActiveId(String(event.active.id))}
 							onDragEnd={handleDragEnd}
