@@ -47,6 +47,7 @@ function App() {
 
 	useEffect(() => {
 		fetchProducts();
+		// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, [page]);
 
 	// const handleDragEnd = async (event: DragEndEvent) => {

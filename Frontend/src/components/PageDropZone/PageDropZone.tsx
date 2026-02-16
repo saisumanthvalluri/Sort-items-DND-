@@ -5,7 +5,7 @@ interface Props {
 }
 
 export default function PageDropZone({ pageNumber }: Props) {
-	const { setNodeRef, isOver } = useDroppable({
+	const { setNodeRef } = useDroppable({
 		id: `page-${pageNumber}`,
 	});
 
