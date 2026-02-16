@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import axios from "axios";
 import { DndContext, DragEndEvent, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy } from "@dnd-kit/sortable";
-import SortableProduct from "./components/SortableProduct/SortableProduct";
-import PageDropZone from "./components/PageDropZone/PageDropZone";
+import React, { useEffect, useState } from "react";
 import "./App.css";
+import PageDropZone from "./components/PageDropZone/PageDropZone";
+import SortableProduct from "./components/SortableProduct/SortableProduct";
+import { createProduct, getProducts, updateProductRank } from "./services/product.service";
 
 interface Product {
 	_id: string;
@@ -17,6 +17,7 @@ function App() {
 	const [page, setPage] = useState(1);
 	const [activeId, setActiveId] = useState<string | null>(null);
 	const [highlightId, setHighlightId] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
 
 	const [pagination, setPagination] = useState({
 		totalItems: 0,
@@ -28,12 +29,20 @@ function App() {
 	});
 
 	const fetchProducts = async () => {
-		const { data } = await axios.get(`http://localhost:5050/api/products?page=${page}&limit=5`);
-		console.log(data);
-		setPagination(data?.pagination || {});
-		setProducts(
-			data?.data?.toSorted((a: Product, b: Product) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0)) || [],
-		);
+		setLoading(true);
+		try {
+			const data = await getProducts(page);
+			console.log(data);
+			setPagination(data?.pagination || {});
+			setProducts(
+				data?.data?.toSorted((a: Product, b: Product) => (a.rank < b.rank ? -1 : a.rank > b.rank ? 1 : 0)) ||
+					[],
+			);
+			setLoading(false);
+		} catch (error) {
+			setLoading(false);
+			console.error("Error fetching products:", error);
+		}
 	};
 
 	useEffect(() => {
@@ -146,16 +155,12 @@ function App() {
 			const targetPage = Number(overId.split("-")[1]);
 
 			try {
-				await axios.patch(`http://localhost:5050/api/products/${activeId}/position`, {
-					targetPage,
-					targetIndex: 0,
-					limit: pagination.limit || 5,
-				});
+				await updateProductRank(activeId, targetPage, pagination.limit || 5);
 
 				setPage(targetPage);
 				setHighlightId(activeId);
 				setTimeout(() => setHighlightId(null), 1000);
-				await fetchProducts();
+				// await fetchProducts();
 			} catch (error) {
 				console.error("Cross-page move failed:", error);
 			}
@@ -176,13 +181,11 @@ function App() {
 			const updatedList = [...remainingItems.slice(0, newIndex), movedItem, ...remainingItems.slice(newIndex)];
 
 			setProducts(updatedList);
-
+			setHighlightId(activeId);
+			setTimeout(() => setHighlightId(null), 1000);
 			try {
-				await axios.patch(`http://localhost:5050/api/products/${activeId}/position`, {
-					targetPage: pagination.currentPage,
-					targetIndex: newIndex,
-					limit: pagination.limit || 5,
-				});
+				const targetPage = Number(overId.split("-")[1]) || pagination.currentPage;
+				await updateProductRank(activeId, targetPage, pagination.limit || 5);
 			} catch (error) {
 				console.error("Same-page reorder failed:", error);
 				await fetchProducts();
@@ -190,17 +193,14 @@ function App() {
 		}
 	};
 
-	const createProduct = async (e: React.FormEvent<HTMLFormElement>) => {
+	const handleCrateProduct = async (e: React.FormEvent<HTMLFormElement>) => {
 		e.preventDefault();
 		const formData = new FormData(e.target as HTMLFormElement);
 		const name = formData.get("name") as string;
 		const price = Number(formData.get("price"));
 
 		try {
-			const { data } = await axios.post("http://localhost:5050/api/products", {
-				name,
-				price,
-			});
+			await createProduct({ name, price });
 			fetchProducts();
 			alert("Product created successfully!");
 		} catch (err) {
@@ -213,50 +213,64 @@ function App() {
 			<div className="card">
 				<h1 className="title">📦 Product Manager</h1>
 
-				<DndContext
-					collisionDetection={closestCenter}
-					onDragStart={(event) => setActiveId(String(event.active.id))}
-					onDragEnd={handleDragEnd}
-					onDragCancel={() => setActiveId(null)}>
-					<div className="product-list">
-						<SortableContext items={products?.map((p) => p._id)} strategy={verticalListSortingStrategy}>
-							{products?.map((product) => (
-								<SortableProduct key={product._id} product={product} highlightId={highlightId} />
-							))}
-						</SortableContext>
+				{loading ? (
+					<div className="loading-div">
+						<div className="spinner"></div>
 					</div>
-
-					{activeId && (
-						<div className="move-container">
-							<h4>Move To Page</h4>
-							<div className="page-zones">
-								{Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
-									.filter((pageNumber) => pageNumber !== pagination.currentPage)
-									.map((pageNumber) => (
-										<PageDropZone key={pageNumber} pageNumber={pageNumber} />
+				) : (
+					<>
+						<DndContext
+							collisionDetection={closestCenter}
+							onDragStart={(event) => setActiveId(String(event.active.id))}
+							onDragEnd={handleDragEnd}
+							onDragCancel={() => setActiveId(null)}>
+							<div className="product-list">
+								<SortableContext
+									items={products?.map((p) => p._id)}
+									strategy={verticalListSortingStrategy}>
+									{products?.map((product) => (
+										<SortableProduct
+											key={product._id}
+											product={product}
+											highlightId={highlightId}
+										/>
 									))}
+								</SortableContext>
 							</div>
+
+							{activeId && (
+								<div className="move-container">
+									<h4>Move To Page</h4>
+									<div className="page-zones">
+										{Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+											.filter((pageNumber) => pageNumber !== pagination.currentPage)
+											.map((pageNumber) => (
+												<PageDropZone key={pageNumber} pageNumber={pageNumber} />
+											))}
+									</div>
+								</div>
+							)}
+						</DndContext>
+
+						<div className="pagination">
+							{pagination?.hasPrevPage && (
+								<button onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
+							)}
+
+							<span className="page-info">
+								Page {page} of {pagination.totalPages}
+							</span>
+
+							{pagination?.hasNextPage && <button onClick={() => setPage((p) => p + 1)}>Next →</button>}
 						</div>
-					)}
-				</DndContext>
 
-				<div className="pagination">
-					{pagination?.hasPrevPage && (
-						<button onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
-					)}
-
-					<span className="page-info">
-						Page {page} of {pagination.totalPages}
-					</span>
-
-					{pagination?.hasNextPage && <button onClick={() => setPage((p) => p + 1)}>Next →</button>}
-				</div>
-
-				<form onSubmit={createProduct} className="form">
-					<input type="text" name="name" placeholder="Product Name" required />
-					<input type="number" name="price" placeholder="Product Price" required />
-					<button type="submit">Create Product</button>
-				</form>
+						<form onSubmit={handleCrateProduct} className="form">
+							<input type="text" name="name" placeholder="Product Name" required />
+							<input type="number" name="price" placeholder="Product Price" required />
+							<button type="submit">Create Product</button>
+						</form>
+					</>
+				)}
 			</div>
 		</div>
 	);
