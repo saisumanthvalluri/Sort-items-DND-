@@ -1,0 +1,151 @@
+/* App Container */
+.app-container {
+	min-height: 100vh;
+	background: linear-gradient(135deg, #667eea, #764ba2);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	padding: 40px 20px;
+	font-family: "Inter", sans-serif;
+}
+
+/* Main Card */
+.card {
+	background: white;
+	width: 100%;
+	max-width: 500px;
+	border-radius: 16px;
+	padding: 30px;
+	box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Title */
+.title {
+	text-align: center;
+	margin-bottom: 25px;
+	font-size: 24px;
+	font-weight: 600;
+	color: #333;
+}
+
+/* Product List */
+.product-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+}
+
+/* Individual Product Card */
+.product-item {
+	padding: 14px 16px;
+	background: #f8f9fc;
+	border-radius: 10px;
+	border: 1px solid #e6e8f0;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	cursor: grab;
+	transition: all 0.2s ease;
+}
+
+.product-item:hover {
+	background: #eef1ff;
+	transform: translateY(-2px);
+	box-shadow: 0 6px 12px rgba(0, 0, 0, 0.08);
+}
+
+.product-item.highlight {
+	background: #d4edda;
+	border: 1px solid #28a745;
+}
+
+/* Move Section */
+.move-container {
+	margin-top: 30px;
+	padding-top: 20px;
+	border-top: 1px solid #eee;
+}
+
+.page-zones {
+	display: flex;
+	gap: 10px;
+	margin-top: 10px;
+	flex-wrap: wrap;
+}
+
+/* Page Drop Zone */
+.page-drop-zone {
+	padding: 10px 14px;
+	background: #f1f3ff;
+	border-radius: 8px;
+	border: 1px dashed #667eea;
+	cursor: pointer;
+	font-weight: 500;
+	transition: all 0.2s ease;
+}
+
+.page-drop-zone:hover {
+	background: #667eea;
+	color: white;
+}
+
+/* Pagination */
+.pagination {
+	margin-top: 20px;
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+}
+
+.pagination button {
+	background: #667eea;
+	color: white;
+	border: none;
+	padding: 8px 14px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: 0.2s ease;
+}
+
+.pagination button:hover {
+	background: #5a67d8;
+}
+
+.page-info {
+	font-weight: 500;
+	color: #555;
+}
+
+/* Form */
+.form {
+	margin-top: 25px;
+	display: flex;
+	gap: 10px;
+	flex-wrap: wrap;
+}
+
+.form input {
+	flex: 1;
+	padding: 10px;
+	border-radius: 6px;
+	border: 1px solid #ddd;
+	outline: none;
+}
+
+.form input:focus {
+	border-color: #667eea;
+}
+
+.form button {
+	background: #28a745;
+	color: white;
+	border: none;
+	padding: 10px 16px;
+	border-radius: 6px;
+	cursor: pointer;
+	transition: 0.2s ease;
+}
+
+.form button:hover {
+	background: #218838;
+}
